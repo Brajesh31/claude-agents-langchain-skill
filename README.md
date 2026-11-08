@@ -1,85 +1,150 @@
-# claude-agents-langchain-skill
+# LangChain Agents and RAG Skill
 
-A Claude Code skill for building LLM applications with LangChain, including agents, tools, integrations, and retrieval-augmented generation.
+A Claude Code skill for building LLM-powered applications with LangChain. It covers agents, tool calling, model-provider integrations, retrieval-augmented generation (RAG), conversation context, vector stores, evaluation, and observability.
 
-## Overview
+LangChain APIs and package boundaries evolve quickly. Use the examples in the skill and references as starting points, then verify imports and configuration against the official documentation for the versions installed in your project.
 
-LangChain provides components for connecting language models to tools, data sources, and application workflows. This skill helps structure agent applications, compose chains, integrate model providers, and build retrieval pipelines.
-
-## Main Capabilities
+## What This Skill Covers
 
 - Build LLM-powered application workflows.
-- Define agents and tool interfaces.
+- Create tool-using agents and define tool contracts.
 - Connect model providers and external integrations.
-- Implement retrieval-augmented generation.
+- Load, split, embed, index, and retrieve documents.
+- Build RAG applications with source metadata.
 - Manage conversation context and memory patterns.
-- Work with vector stores and retrievers.
-- Structure application logic for testing and maintenance.
-- Diagnose retrieval and tool-execution problems.
+- Use vector stores, retrievers, and query patterns.
+- Evaluate retrieval quality separately from answer quality.
+- Trace, debug, and monitor application behavior.
+- Handle tool errors, latency, and cost.
 
 ## When to Use It
 
-Use this skill when building chatbots, document question-answering systems, agent workflows, tool-using assistants, or RAG applications that need integrations with external data.
+Use this skill when building chatbots, question-answering applications, tool-using assistants, RAG pipelines, or workflows that connect language models with external data and services.
+
+Do not use an agent loop by default. A direct model call, deterministic chain, or retriever can be simpler, faster, and easier to test. Add agent autonomy when dynamic tool selection or multi-step decisions are actually required.
 
 ## Installation
 
-Install the LangChain packages required by your chosen integrations, then clone the skill:
+The package set depends on the model provider and integrations. The skill documents the core library and common provider packages:
 
-```bash
+~~~bash
+python -m pip install -U langchain
+python -m pip install langchain-openai
+python -m pip install langchain-anthropic
+~~~
+
+Additional packages may be required for specific integrations, vector stores, or community loaders. Install only the providers and integrations your application uses.
+
+Install the skill into Claude Code:
+
+~~~bash
 git clone https://github.com/Brajesh31/claude-agents-langchain-skill.git ~/.claude/skills/agents-langchain
-```
-
-Package requirements depend on the model provider, vector store, and integrations used by the project.
+~~~
 
 ## Usage
 
-Invoke the skill for LangChain development:
+Invoke the skill:
 
-```text
+~~~text
 /agents-langchain
-```
+~~~
 
-Provide the model provider, data sources, expected tools, retrieval requirements, and deployment constraints.
+Provide the model provider, user interaction, data sources, expected tools, retrieval requirements, privacy constraints, and deployment environment.
 
-## Recommended Workflow
+## Architecture Choices
 
-1. Define the application goal and user interaction.
-2. Decide whether a direct chain, retriever, or agent is required.
-3. Select the model and integrations.
-4. Define tool contracts and permissions.
-5. Prepare and index source documents when using RAG.
-6. Configure retrieval and response generation.
-7. Evaluate retrieval quality separately from answer quality.
-8. Test tool failures and invalid inputs.
-9. Add observability and cost controls.
-10. Validate the end-to-end workflow with realistic tasks.
+| Requirement | Starting point |
+|---|---|
+| One prompt and one model response | Direct model call |
+| Deterministic sequence of steps | Runnable / deterministic chain |
+| Search over a knowledge base | Retriever and RAG pipeline |
+| Dynamic selection among tools | Agent |
+| Stateful workflow with branching and cycles | Consider LangGraph |
+| Document-centric ingestion and retrieval | Consider LlamaIndex when its abstractions fit better |
 
-## Reference Guide
+Choose the simplest architecture that meets the requirements. More abstractions do not automatically improve quality.
+
+## Recommended Development Workflow
+
+1. Define the user outcome and measurable acceptance criteria.
+2. Choose direct model call, deterministic chain, retriever, or agent.
+3. Select the model provider and required packages.
+4. Define typed inputs, outputs, and tool contracts.
+5. Restrict tool permissions and validate parameters.
+6. For RAG, define source access, parsing, metadata, chunking, embeddings, and index lifecycle.
+7. Evaluate retrieval relevance before evaluating generated answers.
+8. Require answers to distinguish supported evidence from missing information.
+9. Test tool errors, timeouts, invalid inputs, and empty retrieval.
+10. Add tracing and cost monitoring.
+11. Run realistic end-to-end tests before deployment.
+12. Record versions, prompt revisions, evaluation results, and known limitations.
+
+## RAG Pipeline
+
+A typical RAG workflow has separate stages:
+
+1. **Ingestion:** connect to approved data sources and load documents.
+2. **Parsing:** extract text and structured content without losing useful context.
+3. **Chunking:** split documents into retrievable units appropriate to the source.
+4. **Metadata:** preserve source identifiers, permissions, timestamps, and other relevant attributes.
+5. **Embedding and indexing:** create and store vectors using a compatible embedding model and vector store.
+6. **Retrieval:** choose similarity, keyword, hybrid, filtering, and reranking strategies as appropriate.
+7. **Generation:** answer using retrieved evidence, with clear handling for missing support.
+8. **Evaluation:** measure retrieval relevance, answer correctness, citation quality, and refusal behavior separately.
+9. **Maintenance:** update, delete, and version indexed content as source data changes.
+
+## References Already Included
 
 | File | Focus |
 |---|---|
-| `references/agents.md` | Agent concepts and patterns |
-| `references/integration.md` | Model and service integrations |
-| `references/rag.md` | Retrieval-augmented generation |
+| [Agents guide](references/agents.md) | Agent creation, tools, execution patterns, and memory |
+| [Integration guide](references/integration.md) | Providers, vector stores, integrations, and observability |
+| [RAG guide](references/rag.md) | Document loading, chunking, embeddings, retrieval, and evaluation |
 
-## Design Checklist
+## Included Resources
 
-- Use an agent only when dynamic tool selection is needed.
-- Keep tools narrowly scoped.
-- Validate tool inputs and outputs.
-- Preserve source metadata in retrieval pipelines.
-- Evaluate chunking and retrieval independently.
-- Handle empty retrieval results.
-- Limit context and token usage.
-- Keep provider configuration outside source code.
-- Test failure paths and timeouts.
+- [Tool contract and safety template](resources/tool-contract-template.md): define inputs, outputs, permissions, validation, and side effects for each tool.
+- [RAG evaluation matrix](resources/rag-evaluation-matrix.md): test retrieval and generated answers independently.
+- [Production readiness checklist](resources/production-readiness-checklist.md): review secrets, access control, observability, reliability, and index maintenance.
 
-## Repository Contents
+## Security and Reliability
 
-- `SKILL.md`: Main LangChain skill instructions.
-- `references/`: Agent, integration, and RAG guidance.
-- `README.md`: Setup and implementation workflow.
+- Store provider API keys in environment variables or an approved secret manager.
+- Never hard-code credentials or commit them to Git.
+- Give tools the minimum permissions required.
+- Validate and constrain tool inputs before external actions.
+- Do not use unrestricted `eval` or shell execution on model-generated or user-supplied input.
+- Add timeouts, retries, and bounded execution limits.
+- Treat retrieved documents and tool outputs as untrusted content.
+- Enforce source-level access controls before retrieval, not just in the prompt.
+- Preserve source metadata so answers can be traced to evidence.
+- Handle empty or low-confidence retrieval without inventing answers.
+- Avoid logging secrets or unnecessary personal data.
 
-## Practical Guidance
+## Repository Structure
 
-Do not use an agent loop for every LLM task. A direct model call or deterministic chain is often simpler, faster, and easier to test. Add agent autonomy only when the task requires it.
+~~~text
+claude-agents-langchain-skill/
+├── SKILL.md
+├── README.md
+├── LICENSE
+├── references/
+│   ├── agents.md
+│   ├── integration.md
+│   └── rag.md
+└── resources/
+    ├── production-readiness-checklist.md
+    ├── rag-evaluation-matrix.md
+    └── tool-contract-template.md
+~~~
+
+## External Resources
+
+- [LangChain documentation](https://docs.langchain.com/)
+- [Python API reference](https://reference.langchain.com/python/)
+- [LangChain GitHub repository](https://github.com/langchain-ai/langchain)
+- [LangSmith](https://smith.langchain.com/)
+
+## License
+
+Released under the MIT License. Copyright (c) 2026 Brajesh Kumar. See the root LICENSE file for the complete terms.
